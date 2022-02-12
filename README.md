@@ -37,7 +37,7 @@ This is a simple master and slave server with socket, input the numbers, and wil
 
 ## Commands
 - Input numbers, every number is split by one space
-    - like `20 30 40`
+    - Like `20 30 40`
     <img src="./imgs/3.png"  width="25%">
     
     - Also support float number `60.554 40.8 40.8 999`
@@ -49,10 +49,10 @@ This is a simple master and slave server with socket, input the numbers, and wil
 ## Architecture
 
 - Launch server and client
-<img src="./imgs/architecture-Page-1.png"  width="75%">
+<img src="./imgs/architecture-Page-1.png"  width="50%">
 
 - Input number and broadcast
-<img src="./imgs/architecture-Page-2.png"  width="75%">
+<img src="./imgs/architecture-Page-2.png"  width="50%">
 
 - Return result to user
-<img src="./imgs/architecture-Page-3.png"  width="75%">
+<img src="./imgs/architecture-Page-3.png"  width="50%">
