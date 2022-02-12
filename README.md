@@ -30,8 +30,8 @@ This is a simple master and slave server with socket, input the numbers, and wil
     1. Input ```docker-compose exec master go run main.go```
     2. Wait all client connect to `master`
     3. You will see the output as image here
-    <img src="./imgs/2.png"  width="75%">
-    4. When you get `Please input numbers`, you can start input the numbers
+    4. <img src="./imgs/2.png"  width="75%">
+    5. When you get `Please input numbers`, you can start input the numbers
 
 ## Commands
 - Input numbers, every number is split by one space
