@@ -1,0 +1,66 @@
+version: '3'
+networks:
+  dashboard:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+services:
+  ### Dev go container #########################################      
+  master:
+    restart: always
+    build:
+      context: ./go
+    volumes:
+      - ./master/:/go/src:cached
+    ports:
+      - "8888"
+    environment:
+      - TZ=Asia/Taipei
+    command: tail -f /dev/null
+    networks:
+      dashboard:
+        ipv4_address: 172.20.0.2
+  client1:
+    restart: always
+    build:
+      context: ./go
+    volumes:
+      - ./client/:/go/src:cached
+    environment:
+      - TZ=Asia/Taipei
+    command: go run main.go
+    depends_on:
+      - "master"
+    networks:
+      dashboard:
+        ipv4_address: 172.20.0.3
+  client2:
+    restart: always
+    build:
+      context: ./go
+    volumes:
+      - ./client/:/go/src:cached
+    environment:
+      - TZ=Asia/Taipei
+    command: go run main.go
+    depends_on:
+      - "master"
+    networks:
+      dashboard:
+        ipv4_address: 172.20.0.4
+  client3:
+    restart: always
+    build:
+      context: ./go
+    volumes:
+      - ./client/:/go/src:cached
+    environment:
+      - TZ=Asia/Taipei
+    command: go run main.go
+    depends_on:
+      - "master"
+    networks:
+      dashboard:
+        ipv4_address: 172.20.0.5
