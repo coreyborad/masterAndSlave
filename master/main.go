@@ -22,47 +22,73 @@ func main() {
 
 	// we need wait 3 client server online
 	types := []string{"Mean", "Mode", "Median"}
+	// for receive every client's output
+	typeChans := map[string]chan []byte{
+		"Mean":   make(chan []byte, 1),
+		"Mode":   make(chan []byte, 1),
+		"Median": make(chan []byte, 1),
+	}
+
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				fmt.Printf("Some connection error: %s\n", err)
+			}
+			manager := clientmanager.GetManager()
+			lensOfClients := len(manager.Clients)
+			if lensOfClients < len(types) {
+				client := clientmanager.NewClient(conn, types[lensOfClients])
+				// Assign type to client(to json format)
+				typeString := map[string]string{
+					"type": types[lensOfClients],
+				}
+				jsonString, _ := json.Marshal(typeString)
+				client.Send(jsonString)
+				// Read client result
+				go ReadSocket(client, typeChans[types[lensOfClients]])
+
+				fmt.Printf("Client [%s] is ready\n", types[lensOfClients])
+				manager = clientmanager.GetManager()
+				lensOfClients = len(manager.Clients)
+				if lensOfClients == len(types) {
+					fmt.Println("All client is ready now")
+					// Start to read user's input
+					go ReadInput()
+				}
+			} else {
+				fmt.Println("We don't need add more client")
+			}
+		}
+	}()
+
+	// Make sure output ordering is always same
 	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			fmt.Printf("Some connection error: %s\n", err)
+		if CheckChanIsFull(typeChans) {
+			fmt.Println(string(<-typeChans["Mean"]))
+			fmt.Println(string(<-typeChans["Mode"]))
+			fmt.Println(string(<-typeChans["Median"]))
 		}
-		manager := clientmanager.GetManager()
-		lensOfClients := len(manager.Clients)
-		if lensOfClients < len(types) {
-			client := clientmanager.NewClient(conn, types[lensOfClients])
-			// Assign type to client(to json format)
-			typeString := map[string]string{
-				"type": types[lensOfClients],
-			}
-			jsonString, _ := json.Marshal(typeString)
-			client.Send(jsonString)
-			// Read client result
-			go ReadSocket(client)
-
-			fmt.Printf("Client [%s] is ready\n", types[lensOfClients])
-			manager = clientmanager.GetManager()
-			lensOfClients = len(manager.Clients)
-			if lensOfClients == len(types) {
-				fmt.Println("All client is ready now")
-				// Start to read user's input
-				go ReadInput()
-			}
-		} else {
-			fmt.Println("We don't need add more client")
-		}
-
 	}
 }
 
-func ReadSocket(client *clientmanager.Client) {
+func CheckChanIsFull(chans map[string]chan []byte) bool {
+	for _, clientChan := range chans {
+		if len(clientChan) == 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func ReadSocket(client *clientmanager.Client, outputChan chan []byte) {
 	ok := true
 	for ok {
 		msg, ok := <-client.ReadMessage
 		if !ok {
 			break
 		}
-		fmt.Println(string(msg))
+		outputChan <- msg
 	}
 }
 
