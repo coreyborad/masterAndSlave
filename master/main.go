@@ -22,6 +22,7 @@ func main() {
 
 	// we need wait 3 client server online
 	types := []string{"Mean", "Mode", "Median"}
+	quitChan := make(chan string)
 	// for receive every client's output
 	typeChans := map[string]chan []byte{
 		"Mean":   make(chan []byte, 1),
@@ -54,7 +55,7 @@ func main() {
 				if lensOfClients == len(types) {
 					fmt.Println("All client is ready now")
 					// Start to read user's input
-					go ReadInput()
+					go ReadInput(quitChan)
 				}
 			} else {
 				fmt.Println("We don't need add more client")
@@ -64,11 +65,22 @@ func main() {
 
 	// Make sure output ordering is always same
 	for {
-		if CheckChanIsFull(typeChans) {
-			fmt.Println(string(<-typeChans["Mean"]))
-			fmt.Println(string(<-typeChans["Mode"]))
-			fmt.Println(string(<-typeChans["Median"]))
+		select {
+		case message, ok := <-quitChan:
+			if !ok {
+				return
+			}
+			if message == "quit" {
+				os.Exit(0)
+			}
+		default:
+			if CheckChanIsFull(typeChans) {
+				fmt.Println(string(<-typeChans["Mean"]))
+				fmt.Println(string(<-typeChans["Mode"]))
+				fmt.Println(string(<-typeChans["Median"]))
+			}
 		}
+
 	}
 }
 
@@ -92,7 +104,7 @@ func ReadSocket(client *clientmanager.Client, outputChan chan []byte) {
 	}
 }
 
-func ReadInput() {
+func ReadInput(signalChan chan string) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Please input numbers")
 	fmt.Println("---------------------")
@@ -101,8 +113,9 @@ func ReadInput() {
 		text, _ := reader.ReadString('\n')
 		// convert CRLF to LF
 		text = strings.Replace(text, "\n", "", -1)
-
+		// quit
 		if strings.Compare("quit", text) == 0 {
+			signalChan <- "quit"
 			return
 		}
 		text = strings.Trim(text, " ")
